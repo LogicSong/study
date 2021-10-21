@@ -190,3 +190,108 @@ book.year = 2018;
 console.log(book.edition); // 2
 ```
 获取函数和设置函数不一定都要定义。只定义获取函数意味着属性是只读的，尝试修改属性会被忽略。在严格模式下，尝试写入只定义了获取函数的属性会抛出错误。类似地，只有一个设置函数的属性是不能读取的，非严格模式下读取会返回 undefined，严格模式下会抛出错误。
+#### 重要方法
+1. Object.defineProperty(obj, propName, configObj).
+2. Object.definePropertied(obj, configObj).
+3. Object.getOwnPropertyDescriptor(obj, propName).
+3. Object.getOwnPropertyDescriptor(obj).
+5. Object.assign(targetObj, sourceObj):这个方法接收一个目标对象和一个或多个源对象作为参数，然后将每个源对象中可枚举（Object.propertyIsEnumerable()返回 true）和自有（Object.hasOwnProperty()返回 true）属性复制到目标对象。以字符串和符号为键的属性会被复制。对每个符合条件的属性，这个方法会使用源对象上的Get取得属性的值，然后使用目标对象上的Set设置属性的值。Object.assign()实际上对每个源对象执行的是浅复制。如果多个源对象都有相同的属性，则使用最后一个复制的值。此外，从源对象访问器属性取得的值，比如获取函数，会作为一个静态值赋给目标对象。换句话说，不能在两个对象间转移获取函数和设置函数。如果赋值期间出错，则操作会中止并退出，同时抛出错误。Object.assign()没有“回滚”之前赋值的概念，因此它是一个尽力而为、可能只会完成部分复制的方法。
+6. Object.is().
+### 创建对象
+#### 1.工厂模式
+#### 2.构造函数模式
+使用构造函数创建对象时，要使用new操作符。此时会进行以下步骤：
+1. 在内存中创建一个新对象。
+2. 这个新对象内部的[[Prototype]]特性被赋值为构造函数的 prototype 属性。
+3. 构造函数内部的 this 被赋值为这个新对象（即 this 指向新对象）。
+4. 执行构造函数内部的代码（给新对象添加属性）。
+5. 如果构造函数返回非空对象，则返回该对象；否则，返回刚创建的新对象。
+```
+constructor 本来是用于标识对象类型的。不过，一般认为 instanceof 操作符是确定对象类型更可靠的方式。这是因为constructor可能会被手动修改指向。
+```
+#### 3.原型模式
+每个函数都会创建一个 prototype 属性，这个属性是一个对象，包含应该由特定引用类型的实例共享的属性和方法。实际上，这个对象就是通过调用构造函数创建的对象的原型。使用原型对象的好处是，在它上面定义的属性和方法可以被对象实例共享。原来在构造函数中直接赋给对象实例的值，可以直接赋值给它们的原型。
+##### 理解原型
+无论何时，只要创建一个函数，就会按照特定的规则为这个函数创建一个 prototype 属性（指向原型对象）。默认情况下，所有原型对象自动获得一个名为 constructor 的属性，指回与之关联的构造函数。对前面的例子而言，Person.prototype.constructor 指向 Person。
+![](../img/constructor-Prototype.png)
+我来捋一下构造函数、原型对象与实例对象之间的关系：
+1. 只要创建了一个构造函数（Person），那么就会对应存在了一个原型对象（通过Person.prototype引用），通过Object.getOwnPropertyDescriptors(Person)可以拿到该prototype属性。
+2. 这个通过Person.prototype引用的原型对象上有一个constructor属性，它就指向构造函数Person。
+3. 原型对象Person.prototype与实例person1的关系是
+```js
+Person.prototype.isPrototypeOf(person1)// true
+Object.getPrototypeOf(person1) === Person.prototype // true，标准
+person1.__proto__ === Person.prototype // true,非标准
+```
+此外，Object 类型还有一个 setPrototypeOf()方法，可以向实例的私有特性\[[Prototype]]写入一个新值。这样就可以重写一个对象的原型继承关系。
+##### 原型链
++ 如何判断某个实例的属性是本身的还是原型链上的？1.person1.hasOwnProperty(propName)2.Object.getOwnPropertyDescriptor(person1,propName)
++ in操作符：有两种方式使用 in 操作符：单独使用和在 for-in 循环中使用。
+在单独使用时，in 操作符会在可以通过对象访问指定属性时返回 true，无论该属性是在实例上还是在原型上。
+`通过in操作判断为true，而hasOwnProperty()结果为false，两者结合可知该属性是在原型对象上而不在其本身。`
+在 for-in 循环中使用 in 操作符时，可以通过对象访问且可以被枚举的属性都会返回，包括实例属性和原型属性。
++ 其他方法：
+1. Object.getOwnPropertyNames():对象上所有可枚举的实例字符串数字属性
+2. Object.getOwnPropertySymbols()：对象上所有可枚举的实例Symbol属性
+3. Object.keys():对象上所有可枚举的 **实例**属性
+### 继承
+ECMA-262 把原型链定义为 ECMAScript 的主要继承方式。
+### 类
+类是ECMAScript 中新的基础性语法糖结构，实际上它背后使用的仍然是原型和构造函数的概念。
+#### 类定义
++ 方式：类声明与类定义
++ 与构造函数方式的不同之处是不存在变量提升
++ 类构成：类可以包含构造函数方法、实例方法、静态类方法、获取函数、设置函数，es6中不支持在类块中定义原型数据（除了函数），但能在外面手动添加。
+`注意：es6还不能定义静态属性`
+#### 类构造函数
+使用 new 调用类的构造函数会执行如下操作：
+1. 在内存中创建一个新对象。
+2. 这个新对象内部的\[[Prototype]]指针被赋值为构造函数的 prototype 属性。
+3. 构造函数内部的 this 被赋值为这个新对象（即 this 指向新对象）。
+4. 执行构造函数内部的代码（给新对象添加属性）。
+5. 如果构造函数返回非空对象，则返回该对象；否则，返回刚创建的新对象。
+`可以对比使用构造函数创建对象时的操作对比来看。`
+#### 实例、原型和类成员
+类的语法可以非常方便地定义应该存在于实例上的成员、应该存在于原型上的成员，以及应该存在于类本身的成员。
++ 定义实例成员应该在构造函数内部添加
++ 定义原型成员要在构造函数外部、类块内部添加
++ 类定义也支持获取和设置访问器。语法与行为跟普通对象一样：
+```js
+class Person { 
+ set name(newName) { 
+  this.name_ = newName; 
+ } 
+ get name() { 
+  return this.name_; 
+ } 
+}
+```
++ 静态类方法（无需存在实例）：在原型方法前加关键字static即静态方法
++ 类定义语法支持在原型和类本身上定义生成器方法，因为支持生成器方法，所以可以通过添加一个默认的迭代器，把类实例变成可迭代对象：
+```js
+class Person { 
+ constructor() { 
+ this.nicknames = ['Jack', 'Jake', 'J-Dog']; 
+ } 
+ *[Symbol.iterator]() { 
+ yield *this.nicknames.entries(); 
+ } 
+}
+let p = new Person(); 
+for (let [idx, nickname] of p) { 
+ console.log(nickname); 
+}
+// Jack 
+// Jake 
+// J-Dog
+```
+### 类继承
+ECMAScript 6 新增特性中最出色的一个就是原生支持了类继承机制。虽然类继承使用的是新语法，但背后依旧使用的是原型链。
+#### super
+1. super 只能在派生类构造函数和静态方法中使用
+2. 不能单独引用 super 关键字，要么用它调用构造函数，要么用它引用静态方法。
+3. 调用 super()会调用父类构造函数，并将返回的实例赋值给 this。
+4. super()的行为如同调用构造函数，如果需要给父类构造函数传参，则需要手动传入。
+5. 如果没有定义类构造函数，在实例化派生类时会调用 super()，而且会传入所有传给派生类的参数。
+6. 在类构造函数中，不能在调用 super()之前引用 this。
+7. 如果在派生类中显式定义了构造函数，则要么必须在其中调用 super()，要么必须在其中返回一个对象。
