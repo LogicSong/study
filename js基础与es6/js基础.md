@@ -300,3 +300,155 @@ ECMAScript 6 新增特性中最出色的一个就是原生支持了类继承机�
 5. 如果没有定义类构造函数，在实例化派生类时会调用 super()，而且会传入所有传给派生类的参数。
 6. 在类构造函数中，不能在调用 super()之前引用 this。
 7. 如果在派生类中显式定义了构造函数，则要么必须在其中调用 super()，要么必须在其中返回一个对象。
+
+## 函数
+定义函数的四种方式：
+1. 函数声明。即 function func(){}
+2. 函数表达式。即 let func = function(){};
+3. 箭头函数
+4. Function对象。即 let func = New Function(funcName, params, funcBody);
+### 箭头函数
++ 箭头函数不能使用 arguments、super 和new.target，也不能用作构造函数。此外，箭头函数也没有 prototype 属性。
+
+### js函数没有重载
+在其他语言比如 Java 中，一个函数可以有两个定义，只要签名（接收参数的类型和数量）不同就行。ECMAScript 函数没有签名，因为参数是由包含零个或多个值的数组表示的。没有函数签名，自然也就没有重载。第二个定义会覆盖前一个定义。
+### 函数参数
+#### 暂时性死区
+**参数初始化顺序遵循“暂时性死区”规则，即前面定义的参数不能引用后面定义的。**
+#### 参数扩展
+参数扩展特性应用在函数调用时。例如
+```js
+function getSum() { 
+ let sum = 0; 
+ for (let i = 0; i < arguments.length; ++i) { 
+ sum += arguments[i]; 
+ } 
+ return sum; 
+}
+const arr = [1,2,3,4]
+getSun(...arr); //函数调用时使用
+```
+#### 参数收集
+参数收集特性应用在函数定义时，例如
+```js
+function getSum(...values) { 
+ // 顺序累加 values 中的所有值
+ // 初始值的总和为 0 
+ return values.reduce((x, y) => x + y, 0); 
+}
+console.log(getSum(1,2,3)); // 6
+```
+`箭头函数支持函数参数扩展与参数收集`
+### 函数声明与函数表达式
+JavaScript 引擎在加载数据时对它们是区别对待的。JavaScript 引擎在任何代码执行之前，会先读取函数声明，并在执行上下文中
+生成函数定义。而函数表达式必须等到代码执行到它那一行，才会在执行上下文中生成函数定义。
+函数声明会在任何代码执行之前先被读取并添加到执行上下文。这个过程叫作函数声明提升（function declaration hoisting）
+除此以外，函数声明与函数表达式是一样的。
+### 函数作为值
+因为函数名在 ECMAScript 中就是变量，所以函数可以用在任何可以使用变量的地方。这意味着不仅可以把函数作为参数传给另一个函数，而且还可以在一个函数中返回另一个函数。
+### 函数内部
+在 ECMAScript 5 中，函数内部存在两个特殊的对象：arguments 和 this。ECMAScript 6 又新增了 new.target 属性。
+#### arguments
+arguments是一个类数组对象，包含调用函数时传入的所有参数。这个对象只有以 function 关键字定义函数（相对于使用箭头语法创建函数）时才会有。虽然主要用于包含函数参数，但 arguments 对象其实还有一个 callee 属性，是一个指向 arguments 对象所在函数的指针。来看下面这个经典的阶乘函数：
+```js
+function factorial(num) { 
+ if (num <= 1) { 
+ return 1; 
+ } else { 
+ return num * factorial(num - 1); 
+ } 
+}
+```
+这个函数要正确执行就必须保证函数名是 factorial，从而导致了紧密耦合。使用 arguments.callee 就可以让函数逻辑与函数名解耦：
+```js
+function factorial(num) { 
+ if (num <= 1) { 
+ return 1; 
+ } else { 
+ return num * arguments.callee(num - 1); 
+ } 
+}
+```
+#### this
+另一个特殊的对象是 this，它在标准函数和箭头函数中有不同的行为。
+在标准函数中，this 引用的是把函数当成方法调用的上下文对象，这时候通常称其为 this 值（在网页的全局上下文中调用函数时，this 指向 windows）。
+在箭头函数中，this引用的是定义箭头函数的上下文。
+在事件回调或定时回调中调用某个函数时，this 值指向的并非想要的对象。此时将回调函数写成箭头函数就可以解决问题。这是因为箭头函数中的 this 会保留定义该函数时的上下文。
+#### new.target
+ECMAScript 中的函数始终可以作为构造函数实例化一个新对象，也可以作为普通函数被调用。ECMAScript 6 新增了检测函数是否使用 new 关键字调用的 new.target 属性。如果函数是正常调用的，则 new.target 的值是 undefined；如果是使用 new 关键字调用的，则 new.target 将引用被调用的构造函数。
+### 函数属性与方法
+函数是对象，因此有属性和方法。
+每个函数都有两个属性：length和 prototype。其中，length 属性保存函数定义的命名参数的个数，。prototype 是保存引用类型所有实例方法的地方，这意味着 toString()、valueOf()等方法实际上都保存在 prototype 上，进而由所有实例共享。
+函数还有两个方法：apply()和 call()。这两个方法都会以指定的 this 值来调用函数，即会设置调用函数时函数体内 this 对象的值。apply()方法接收两个参数：函数内 this 的值和一个参数数组。第二个参数可以是 Array 的实例，但也可以是 arguments 对象。call()方法与 apply()的作用一样，只是传参的形式不同。第一个参数跟 apply()一样，也是 this值，而剩下的要传给被调用函数的参数则是逐个传递的。换句话说，通过 call()向函数传参时，必须将参数一个一个地列出来。
+ECMAScript5出于同样的目的定义了一个新方法：bind()。bind()方法会创建一个新的函数实例，其 this 值会被绑定到传给 bind()的对象。
+`bind函数与apply、call不同，bind函数是返回了一个绑定this后的新函数，而后者则是绑定this后执行函数。`
+### 闭包
+#### 关于闭包
+闭包指的是那些引用了另一个函数作用域中变量的函数，通常是在嵌套函数中实现的。
+函数执行时，每个执行上下文中都会有一个包含其中变量的对象。全局上下文中的叫变量对象，它会在代码执行期间始终存在。而函数局部上下文中的叫活动对象，只在函数执行期间存在。在定义compare()函数时，就会为它创建作用域链，预装载全局变量对象，并保存在内部的\[[Scope]]中。在调用这个函数时，会创建相应的执行上下文，然后通过复制函数的\[[Scope]]来创建其作用域链。接着会创建函数的活动对象（用作变量对象）并将其推入作用域链的前端。
+![](../img/closure.png)
+`因为闭包会保留它们包含函数的作用域，所以比其他函数更占用内存。过度使用闭包可能导致内存过度占用，因此建议仅在十分必要时使用。`
+#### 在闭包中使用this
+在闭包中使用 this 会让代码变复杂。如果内部函数没有使用箭头函数定义，则 this 对象会在运行时绑定到执行函数的上下文。如果在全局函数中调用，则 this 在非严格模式下等于 window，在严格模式下等于 undefined。如果作为某个对象的方法调用，则 this 等于这个对象。匿名函数在这种情况下不会绑定到某个对象，这就意味着 this 会指向 window，除非在严格模式下 this 是 undefined。
+不过，**由于闭包的写法所致，这个事实有时候没有那么容易看出来**。
+### 立即调用的函数表达式（IIFE，Immediately Invoked Function Expression）
+IIFE类似于函数声明，但由于被包含在括号中，所以会被解释为函数表达式。紧跟在第一组括号后面的第二组括号会立即调用前面的函数表达式。
+```js
+(function() { 
+ // 块级作用域 
+})();
+```
+使用 IIFE 可以模拟块级作用域，即在一个函数表达式内部声明变量，然后立即调用这个函数。这样位于函数体作用域的变量就像是在块级作用域中一样。ECMAScript 5 尚未支持块级作用域，使用 IIFE模拟块级作用域是相当普遍的。比如下面的例子：
+```js
+// IIFE 
+(function () { 
+ for (var i = 0; i < count; i++) { 
+ console.log(i); 
+ } 
+})();
+console.log(i); // 抛出错误
+```
+说明 IIFE 用途的一个实际的例子，就是可以用它锁定参数值。
+```js
+let divs = document.querySelectorAll('div'); 
+// 达不到目的！ 
+for (var i = 0; i < divs.length; ++i) { 
+ divs[i].addEventListener('click', function() { 
+ console.log(i); 
+ }); 
+}
+```
+这里使用 var 关键字声明了循环迭代变量 i，但这个变量并不会被限制在 for 循环的块级作用域内。因此，渲染到页面上之后，点击每个<div>都会弹出元素总数。这是因为在执行单击处理程序时，迭代变量的值是循环结束时的最终值，即元素的个数。
+以前，为了实现点击第几个<div>就显示相应的索引值，需要借助 IIFE 来执行一个函数表达式，传入每次循环的当前索引，从而“锁定”点击时应该显示的索引值:
+```js
+let divs = document.querySelectorAll('div'); 
+for (var i = 0; i < divs.length; ++i) { 
+ divs[i].addEventListener('click', (function(frozenCounter) {
+ return function() { 
+ console.log(frozenCounter); 
+ }; 
+ })(i)); 
+}
+```
+而使用 ECMAScript 块级作用域变量，就不用这么大动干戈了:
+```js
+let divs = document.querySelectorAll('div'); 
+for (let i = 0; i < divs.length; ++i) { 
+ divs[i].addEventListener('click', function() {
+     console.log(i); 
+ }); 
+}
+```
+这是因为在 ECMAScript 6 中，如果对 for 循环使用块级作用域变量关键字，在这里就是 let，那么循环就会 **为每个循环创建独立的变量**，从而让每个单击处理程序都能引用特定的索引。
+但要注意，如果把变量声明拿到 for 循环外部，那就不行了。下面这种写法会碰到跟在循环中使用var i = 0 同样的问题：
+```js
+let divs = document.querySelectorAll('div'); 
+// 达不到目的！
+let i; 
+for (i = 0; i < divs.length; ++i) { 
+ divs[i].addEventListener('click', function() { 
+ console.log(i); 
+ }); 
+}
+```
+## 期约与异步函数（Promise and Async Function）
