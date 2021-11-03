@@ -452,3 +452,102 @@ for (i = 0; i < divs.length; ++i) {
 }
 ```
 ## 期约与异步函数（Promise and Async Function）
+### Promise
+#### Promise基础
+> Promise通过 new 操作符来实例化。创建新期约时需要传入执行器（executor）函数作为参数。
+
+> Promise状态机：pending、fulfilled、rejected
+
+##### Promise的实例方法:
+1. Promise.prototype.then()
+2. Promise.prototype.catch()
+3. Promise.prototype.finally()
+#### 期约连锁与期约合成
+> 多个期约组合在一起可以构成强大的代码逻辑。这种组合可以通过两种方式实现：期约连锁与期约合成。前者就是一个期约接一个期约地拼接，后者则是将多个期约组合为一个期约。
+#### Promise.all()和 Promise.race()
+##### Promise.all()
+1. 合成的期约只会在每个包含的期约都解决之后才解决
+2. 如果至少有一个包含的期约待定，则合成的期约也会待定。如果有一个包含的期约拒绝，则合成的期约也会拒绝
+3. 如果所有期约都成功解决，则合成期约的解决值就是所有包含期约解决值的数组，按照迭代器顺序
+4. 如果有期约拒绝，则第一个拒绝的期约会将自己的理由作为合成期约的拒绝理由。之后再拒绝的期约不会影响最终期约的拒绝理由。不过，这并不影响所有包含期约正常的拒绝操作。合成的期约会 **静默**处理所有包含期约的拒绝操作。
+> **手写Promise.all()**
+##### Promise.race()
+>Promise.race()静态方法返回一个包装期约，是一组集合中最先解决或拒绝的期约的镜像，之后的则被忽略。这个方法接收一个可迭代对象，返回一个新期约。Promise.race()不会对解决或拒绝的期约区别对待。
+如果有一个期约拒绝，只要它是第一个落定的，就会成为拒绝合成期约的理由。之后再拒绝的期约
+不会影响最终期约的拒绝理由。不过，这并不影响所有包含期约正常的拒绝操作。与 Promise.all()类似，合成的期约会静默处理所有包含期约的拒绝操作。
+#### 串行期约合成（Promis Compose）
+compose函数（聚合函数）
+```js
+function compose(...fns) { 
+ return (x) => fns.reduce((promise, fn) => promise.then(fn), Promise.resolve(x)) 
+}
+compose(f1,f2,f3)(1);//先聚合再调用
+```
+#### Promise扩展
+ES6中的Promise不支持取消操作，即一旦开始便无法挽回。
+### 异步函数
+>异步函数，也称为“async/await”（语法关键字），是 ES6 期约模式在 ECMAScript 函数中的应用。async/await 是 ES8 规范新增的。
+#### async
+>async 关键字用于声明异步函数。这个关键字可以用在函数声明、函数表达式、箭头函数和方法上。
+
+使用 async 关键字可以让函数具有异步特征，但总体上其代码仍然是同步求值的。而
+在参数或闭包方面，异步函数仍然具有普通 JavaScript 函数的正常行为。正如下面的例子所示，foo()函数仍然会在后面的指令之前被求值。
+```js
+async function foo() {
+ console.log(1); 
+} 
+foo(); 
+console.log(2); 
+// 1 
+// 2
+```
+不过，异步函数如果使用 return 关键字返回了值（如果没有 return 则会返回 undefined），这个值会被 Promise.resolve()包装成一个Promise对象。
+> **异步函数始终返回期约对象。在函数外部调用这个函数可以得到它返回的期约**
+```js
+ console.log(1); 
+ return 3; 
+} 
+// 给返回的期约添加一个解决处理程序
+foo().then(console.log);
+console.log(2); 
+// 1 
+// 2 
+// 3
+```
+#### await
+>使用 await关键字可以暂停异步函数代码的执行，等待期约解决。
+await 关键字期待（但实际上并不要求）一个实现 thenable 接口的对象，但常规的值也可以。如果是实现 thenable 接口的对象，则这个对象可以由 await 来“解包”。如果不是，则这个值就被当作已经解决的期约。
+await 关键字必须在异步函数中使用，不能在顶级上下文如<script>标签或模块中使用。
+async/await 中真正起作用的是 await。async 关键字，无论从哪方面来看，都不过是一个标识符。
+毕竟，异步函数如果不包含 await 关键字，其执行基本上跟普通函数没有什么区别
+```js
+async function foo() { 
+ console.log(2); 
+} 
+console.log(1); 
+foo(); 
+console.log(3);
+//1
+//2
+//3
+```
+>要完全理解 await 关键字，必须知道它并非只是等待一个值可用那么简单。JavaScript 运行时在碰到 await 关键字时，会记录在哪里暂停执行。等到 await 右边的值可用了，JavaScript 运行时会向消息队列中推送一个任务，这个任务会恢复异步函数的执行。
+因此，即使 await 后面跟着一个立即可用的值，函数的其余部分也会被异步求值。
+```js
+async function foo() {
+ console.log(2); 
+ await null; // 微任务
+ console.log(4); 
+} 
+setTimeout(() => {// 宏任务
+    console.log(5);
+}, 0);
+console.log(1); 
+foo(); 
+console.log(3); 
+// 1 
+// 2 
+// 3 
+// 4
+// 5
+```
