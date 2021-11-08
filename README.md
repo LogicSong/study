@@ -20,7 +20,14 @@ CSRF/XSRF
 经典题目：从输入url到页面显示，发生了啥玩意
 如何让文件加载更快(缓存，网络)
 
+## 5、网络
+http/https --> 图解http
+
 ## 5、工程化
+代码检查ESLint、StyleLint
+代码风格Prettier
+webpack
+git：提交规范、提交检查pre-commit、husky
 
 ## 6、编译
 AST
