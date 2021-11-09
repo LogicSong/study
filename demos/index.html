@@ -6,30 +6,97 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Document</title>
     <style>
+      * {
+        margin: 0;
+        padding: 0;
+      }
       html,
       body {
         height: 100%;
       }
+      .parent {
+        width: 100%;
+        height: 100%;
+        display: flex;
+      }
+      .child {
+        width: 100px;
+        height: 100px;
+        background-color: indianred;
+        /* flex-grow: 1; */
+        /* flex-shrink: 3; */
+      }
+      .child:nth-of-type(2n) {
+        background-color: indigo;
+        /* flex-shrink: 3; */
+        /* flex-grow: 1; */
+        flex-basis: 500px;
+      }
+      .relative {
+        position: relative;
+        margin: 20px;
+        padding: 20px;
+        width: 400px;
+        height: 400px;
+        background-color: indigo;
+        border: 5px dashed #ccc;
+      }
+      .absolute {
+        position: absolute;
+        width: 200px;
+        height: 200px;
+        /* top: 0;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        transform: translate(-50%,-50%); */
+        background-color: indianred;
+      }
+      .inline-flex {
+        display: inline-flex;
+        width: 400px;
+      }
+      .box {
+        width: 100px;
+        height: 100px;
+      }
     </style>
   </head>
   <body>
-    <!--测试history路由-->
-    <ul>
-      <li><a href="/">turn yellow</a></li>
-      <li><a href="/blue">turn blue</a></li>
-      <li><a href="/green">turn green</a></li>
-    </ul>
+    <!-- <div class="parent">
+      <div class="child"></div>
+      <div class="child"></div>
+      <div class="child"></div>
+      <div class="child"></div>
+      <div class="child"></div>
+      <div class="child"></div>
+      <div class="child"></div>
+      <div class="child"></div>
+      <div class="child"></div>
+      <div class="child"></div>
+      <div class="child"></div>
+      <div class="child"></div>
+      <div class="child"></div>
+      <div class="child"></div>
+      <div class="child"></div>
+      <div class="child"></div>
+    </div> -->
+    <div class="relative">
+      <div class="absolute"></div>
+    </div>
+    <!-- <div class="inline-flex">
+      <div class="box">111</div>
+      <div class="box">222</div>
+      <div class="box">333</div>
+    </div> -->
+    <!-- <div class="relative">
+      <div class="absolute">
+        111111
+      </div>
+    </div> -->
   </body>
   <script>
-    // 测试闭包在浏览器上如何查看
-    // function f1(){
-    //     const p = 1;
-    //     return function(){
-    //         console.log(p);
-    //     }
-    // }
-    // f1()();
 
   </script>
-  <script type="text/javascript" src='./h5Router.js'></script>
+  <!-- <script type="text/javascript" src='./h5Router.js'></script> -->
 </html>
