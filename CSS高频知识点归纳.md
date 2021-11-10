@@ -290,6 +290,7 @@ position属性用来指定一个元素在网页上的位置，一共有5种定�
   top:20px;
 }
 ```
+`一旦给元素加上absolute或float就相当于给元素加上了display:block`
 
 ##### 绝对定位需要注意的问题
 问：父元素relative,子元素absolute,绝对定位的基点是在哪里？padding？border？margin？
@@ -315,3 +316,16 @@ CSS3中的属性对层叠上下文产生的影响
 1.1如果是，谁的层叠等级大，谁在上面（怎么判断层叠等级大小呢？——看“层叠顺序”图）。
 1.2如果两个元素不在统一层叠上下文中，请先比较他们所处的层叠上下文的层叠等级。 
 2、当两个元素层叠等级相同、层叠顺序相同时，在DOM结构中后面的元素层叠等级在前面元素之上。
+
+#### 如何使一个div的高度始终为宽度的一半
+使用height:0;padding-bottom:50%。
+>当margin或者padding取值是百分比的时候，无论是left，right或者top，bottom，都是以父元素的width为参考物，进行提前占位，避免资源加载时候的闪烁，还可以让高度自适应。
+```css
+{
+  width: 100%;
+  height: 0;
+  padding-bottom: 50%;
+  /* background: blue; */
+}
+```
+
