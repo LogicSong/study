@@ -27,7 +27,7 @@ http/https --> 图解http
 代码检查ESLint、StyleLint
 代码风格Prettier
 webpack
-git：提交规范、提交检查pre-commit、husky
+git：提交规范、提交检查pre-commit、husky、git rebase、git flow
 
 ## 6、编译
 AST
