@@ -1,5 +1,7 @@
 # React
 
+![](https://p6-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/8954bb134b6049afa265031fe36c53d7~tplv-k3u1fbpfcp-watermark.awebp)
+
 ## render阶段：Fiber节点如何被创建并构建Fiber树
 
 1. render阶段开始于performSyncWorkOnRoot或**performConcurrentWorkOnRoot**方法的调用。这取决于本次更新是同步更新还是异步更新。他们会调用如下方法：
@@ -34,9 +36,10 @@ function workLoopConcurrent() {
     1. 以处理HostComponent为例，和beginWork一样，我们根据current === null ?判断是mount还是update。同时针对HostComponent，判断update时我们还需要考虑workInProgress.stateNode != null ?（即该Fiber节点是否存在对应的DOM节点）。
     2. update时：当update时，Fiber节点已经存在对应DOM节点，所以不需要生成DOM节点。需要做的主要是处理props，比如：onClick、onChange等回调函数的注册、处理style prop、处理DANGEROUSLY_SET_INNER_HTML prop、处理children prop等，最主要的逻辑是调用updateHostComponent方法。在updateHostComponent内部，被处理完的props会被赋值给workInProgress.updateQueue，并最终会在commit阶段被渲染在页面上。其中updatePayload为数组形式，他的偶数索引的值为变化的prop key，奇数索引的值为变化的prop value。
     3. mount时：主要逻辑包括三个：为Fiber节点生成对应的DOM节点、将子孙DOM节点插入刚生成的DOM节点中、与update逻辑中的updateHostComponent类似的处理props的过程
-    > mount时只会在rootFiber存在Placement effectTag。那么commit阶段是如何通过一次插入DOM操作（对应一个Placement effectTag）将整棵DOM树插入页面的呢？原因就在于completeWork中的appendAllChildren方法。由于completeWork属于“归”阶段调用的函数，每次调用appendAllChildren时都会将已生成的子孙DOM节点插入当前生成的DOM节点下。那么当“归”到rootFiber时，我们已经有一个构建好的离屏DOM树。至此render阶段的绝大部分工作就完成了。
+    > mount时只会在rootFiber存在Placement effectTag。那么commit阶段是如何通过一次插入DOM操作（对应一个Placement effectTag）将整棵DOM树插入页面的呢？原因就在于completeWork中的appendAllChildren方法。由于completeWork属于“归”阶段调用的函数，每次调用appendAllChildren时都会将已生成的子孙DOM节点插入当前生成的DOM节点下。**那么当“归”到rootFiber时，我们已经有一个构建好的离屏DOM树**。至此render阶段的绝大部分工作就完成了。
     4. effectList：还有一个问题：作为DOM操作的依据，commit阶段需要找到所有有effectTag的Fiber节点并依次执行effectTag对应操作。难道需要在commit阶段再遍历一次Fiber树寻找effectTag !== null的Fiber节点么？这显然是很低效的。为了解决这个问题，在completeWork的上层函数completeUnitOfWork中，每个执行完completeWork且存在effectTag的Fiber节点会被保存在一条被称为effectList的单向链表中。effectList中第一个Fiber节点保存在fiber.firstEffect，最后一个元素保存在fiber.lastEffect。类似appendAllChildren，在“归”阶段，所有有effectTag的Fiber节点都会被追加在effectList中，最终形成一条以rootFiber.firstEffect为起点的单向链表。这样，在commit阶段只需要遍历effectList就能执行所有effect了。
-    5. 至此，render阶段全部工作完成。在`performSyncWorkOnRoot`函数中fiberRootNode被传递给`commitRoot`方法，开启commit阶段工作流程。
+    5. 当某个Fiber节点执行完completeWork，如果其存在兄弟Fiber节点（即fiber.sibling !== null），会进入其兄弟Fiber的“递”阶段。如果不存在兄弟Fiber，会进入父级Fiber的“归”阶段。
+    6. 至此，render阶段全部工作完成。在`performSyncWorkOnRoot`函数中fiberRootNode被传递给`commitRoot`方法，开启commit阶段工作流程。
 ![](./img/completeWork.png)
 
 ```js
@@ -68,8 +71,8 @@ function workLoopConcurrent() {
 // 我们知道，render阶段的工作是在内存中进行，当工作结束后会通知Renderer需要执行的DOM操作。要执行DOM操作的具体类型就保存在fiber.effectTag中。
 ```
 那么，如果要通知Renderer将Fiber节点对应的DOM节点插入页面中，需要满足两个条件：
-fiber.stateNode存在，即Fiber节点中保存了对应的DOM节点
-(fiber.effectTag & Placement) !== 0，即Fiber节点存在Placement effectTag
+- fiber.stateNode存在，即Fiber节点中保存了对应的DOM节点
+- (fiber.effectTag & Placement) !== 0，即Fiber节点存在Placement effectTag
 我们知道，mount时，fiber.stateNode === null，且在reconcileChildren中调用的mountChildFibers不会为Fiber节点赋值effectTag。那么首屏渲染如何完成呢？
 针对第一个问题，fiber.stateNode会在completeWork中创建，我们会在下一节介绍。
 第二个问题的答案十分巧妙：假设mountChildFibers也会赋值effectTag，那么可以预见mount时整棵Fiber树所有节点都会有Placement effectTag。那么commit阶段在执行DOM操作时每个节点都会执行一次插入操作，这样大量的DOM操作是极低效的。
@@ -311,3 +314,26 @@ const queue: UpdateQueue<State> = {
 #### Fiber、UpdateQueue、Update之间的关系
 
 每次触发更新时，相应的Fiber都会生成一个Update，一个Fiber可能生成了多个Update，这些Update以链表的形式保存在fiber.UpdateQueue中。这就是Fiber、Update、UpdateQueue之间的关系。
+
+
+## Hook
+
+### React团队推动hook的动机
+
+1. 在组件之间复用状态逻辑很难
+
+传统class组件的解决方案是使用`render props`和`高阶组件(HOC)`，但是这类方案需要重新组织你的组件结构，这可能会很麻烦，使你的代码难以理解。如果你在 React DevTools 中观察过 React 应用，你会发现由 providers，consumers，高阶组件，render props 等其他抽象层组成的组件会形成“嵌套地狱”。
+
+**React 需要为共享状态逻辑提供更好的原生途径。**
+
+2. 复杂组件变得难以理解
+
+每个生命周期常常包含一些不相关的逻辑。例如，组件常常在 componentDidMount 和 componentDidUpdate 中获取数据。但是，同一个 componentDidMount 中可能也包含很多其它的逻辑，如设置事件监听，而之后需在 componentWillUnmount 中清除。相互关联且需要对照修改的代码被进行了拆分，而完全不相关的代码却在同一个方法中组合在一起。如此很容易产生 bug，并且导致逻辑不一致。
+
+为了解决这个问题，**Hook 将组件中相互关联的部分拆分成更小的函数（比如设置订阅或请求数据）**
+
+3. 难以理解的 class
+
+必须去理解 JavaScript 中 this 的工作方式，这与其他语言存在巨大差异。还不能忘记绑定事件处理器。没有稳定的语法提案，这些代码非常冗余。大家可以很好地理解 props，state 和自顶向下的数据流，但对 class 却一筹莫展。
+
+
