@@ -54,7 +54,7 @@ function myPromise(excutor) {
 // then 方法是promise的原型方法
 // 接受一个成功回调onFulfilled和一个失败回调onRejected
 // onFulfilled接收成功的返回值，onRejected接受失败的返回值
-MyPromise.prototype.then = function(onFulfilled, onRejected) {
+myPromise.prototype.then = function(onFulfilled, onRejected) {
     const self = this;
     let bridgePromise;
     //防止使用者不传成功或失败回调函数，所以成功失败回调都给了默认回调函数
@@ -106,7 +106,7 @@ MyPromise.prototype.then = function(onFulfilled, onRejected) {
     }
 }
 //catch方法其实是个语法糖，就是只传onRejected不传onFulfilled的then方法
-MyPromise.prototype.catch = function(onRejected) {
+myPromise.prototype.catch = function(onRejected) {
     return this.then(null, onRejected);
 }
 
@@ -128,10 +128,10 @@ function resolvePromise(bridgePromise, x, resolve, reject) {
      } else {
          resolve(x);
      }
- }
+}
 
-Promise.prototype.all = function(arr) {
-    return new Promise((resolve, reject) => {
+myPromise.prototype.all = function(arr) {
+    return new myPromise((resolve, reject) => {
         // 判断arr是否为数组
         if (!Array.isArray(arr)) {
             throw new Error('参数必须为数组');
@@ -155,4 +155,28 @@ Promise.prototype.all = function(arr) {
             })
         }
     })
+}
+
+myPromise.race = function(promises) {
+    return new myPromise(function(resolve, reject) {
+        for (let i = 0; i < promises.length; i++) {
+            promises[i].then(function(data) {
+                resolve(data);
+            }, function(error) {
+                reject(error);
+            });
+        }
+    });
+}
+
+myPromise.resolve = function(value) {
+    return new myPromise(resolve => {
+        resolve(value);
+    });
+}
+
+myPromise.reject = function(error) {
+    return new MyPromise((resolve, reject) => {
+        reject(error);
+    });
 }
