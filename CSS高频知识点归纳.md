@@ -329,3 +329,34 @@ CSS3中的属性对层叠上下文产生的影响
 }
 ```
 
+### 移动端1px解决方案
+
+#### 真正原因
+
+> 和dpr没有任何关系，dpr可以用来解释不同分辨率手机呈现页面的精细度的差异，但并不能解释1px问题。
+
+我们做移动端页面时一般都会设置meta viewport的content=“width=device-width”，
+这里就是把html视窗宽度大小设置等于设备宽度的大小，大多数手机的屏幕设备宽度都差不多，以iphoneX为例，屏幕宽度375px。
+
+而UI给设计图的时候基本上都是给的二倍图甚至三倍图，假设设计图是750px的二倍图，在750px上设计了1px的边框，要拿到375px宽度的手机来显示，就相当于整体设计图缩小一倍，所以在375px手机上要以0.5px呈现才符合预期效果，然而css里最低只支持1px大小，不足1px就以1px显示，所以你看到的就显得边框较粗，实际上只是设计图整体缩小了，而1px的边框没有跟着缩小导致的。
+
+![1px问题的原因](https://blog.csdn.net/u010059669/article/details/88953620)
+
+#### 解决方案
+
+这里只说一种解决方案：
+
+```js
+
+var viewport = document.querySelector("meta[name=viewport]");
+var scale = window.screen.width / 750;
+viewport.setAttribute('content', `width=750,initial-scale=${scale}, maximum-scale=${scale}, minimum-scale=${scale}, user-scalable=no`);
+
+var docEl = document.documentElement;
+var fontsize = 10 * (docEl.clientWidth / 320) + 'px';
+docEl.style.fontSize = fontsize;
+
+```
+
+![解决方案](https://blog.csdn.net/u010059669/article/details/88953620)
+
