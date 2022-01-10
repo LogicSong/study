@@ -360,3 +360,132 @@ docEl.style.fontSize = fontsize;
 
 ![解决方案](https://blog.csdn.net/u010059669/article/details/88953620)
 
+## CSS继承
+
+css 的继承很简单，分为默认继承的和默认不继承的，但所有属性都可以通过设置 inherit 实现继承。
+
+当没有指定值时，默认继承的属性取父元素的同属性的计算值（相当于设置了 inherit ），默认不继承的属性取属性的初始值（相当于设置了 initial ）。
+
+默认继承的属性：
+- 所有元素默认继承：visibility、cursor
+- 文本属性默认继承：letter-spacing、word-spacing、white-space、line-height、color、font、 font-family、font-size、font-style、font-variant、font-weight、text-indent、text-align、text-shadow、text-transform、direction
+- 列表元素默认继承：list-style、list-style-type、list-style-position、list-style-image
+- 表格元素默认继承：border-collapse
+
+总结：只需要记住那些默认继承的，剩下的都是默认不继承的。而默认继承的元素除了文本相关的哪些，只有 visibility、cursor 比较常用了
+
+## 使用css画一个三角形
+
+```css
+.triangle {
+  width: 0px;
+  height: 0px;
+  border-bottom: 20px solid springgreen;
+  border-left: 20px solid transparent;
+  border-right: 20px solid transparent;
+}
+```
+
+## CSS3中的动画属性
+
+> transition、animation和transform是CSS3中三个制作动画的重要属性
+
+### transition
+
+允许css的属性值在一定的时间区间内平滑地**过渡**。这种效果可以在鼠标单击、获得焦点、被点击或对元素任何改变中触发，并圆滑地以动画效果改变CSS的属性值。
+
+transition主要包含四个属性值：执行变换的属性：transition-property，变换延续的时间：transition-duration，在延续时间段，变换的速率变化：transition-timing-function，变换延迟时间：transition-delay。
+
+- transition-property: none || all || property,要过渡的属性名称，多个属性时用逗号连接
+- transition-duration：为数值，单位为s（秒）或者ms(毫秒)，其默认值是0
+- transition-timing-function：linear || ease || ease-in || ease-out || ease-in-out || cubic-
+bezier(n,n,n,n)。
+- transition-delay：为数值，单位为s（秒）或者ms(毫秒)， 默认大小是0。
+
+例子：
+```css
+.one {
+        width: 100px;
+        height: 100px;
+        margin: 200px auto;
+        background-color: #cd4a48;
+        transition: width 2s ease;
+    }
+
+    .one:hover {
+        width: 300px;
+    }
+
+```
+
+注意：
+1. 不是所有的CSS属性都支持transition
+2. transition需要明确知道，开始状态和结束状态的具体数值，才能计算出中间状态。比如，height从0px变化到100px，transition可以算出中间状态。但是，transition没法算出0px到auto的中间状态，也就是说，如果开始或结束的设置是height: auto，那么就不会产生动画效果。
+3. transition需要事件触发，所以没法在网页加载时自动发生。
+4. transition是一次性的，不能重复发生，除非一再触发。
+5. transition写多个属性时，应该分别写4个子属性值，写在一起会出现只有一个属性有过渡效果，其它属性是突变的。
+
+### animation
+
+不同于transition只能定义首尾两个状态，animation可以定义任意多的关键帧，因而能实现更复杂的动画效果。
+
+```css
+animation: animation-name || animation-duration || animation-timing-function || animation-delay || animation-iteration-count || animation-direction
+```
+
+animation主要包含六个属性，**可以看出前四个属性与transition一一对应的**。具体含义如下：
+
+属性名|描述
+:--|:--
+animation-name|需要绑定到选择器的 keyframe 名称
+animation-duration|规定完成动画所花费的时间，以秒或毫秒计。
+animation-timing-function|规定动画的速度曲线。
+animation-delay|规定在动画开始之前的延迟，默认值为0。
+animation-iteration-count|规定动画应该播放的次数，默认值为1。
+animation-direction|规定是否应该轮流反向播放动画，默认值是正向。
+animation-fill-mode|规定动画结束以后，是否让动画保持在结束状态。默认行为是跳回到动画的开始状态。
+animation-play-state|规定动画播放过程突然停止时是否保持突然终止时的状态。默认行为是跳回到动画的开始状态。
+
+##### keyframe
+
+在使用animation之前要先会使用@keyframe
+@keyframes 让开发者通过指定动画中特定时间点必须展现的关键帧样式（或者说停留点）来控制CSS动画的中间环节。这让开发者能够控制动画中的更多细节而不是全部让浏览器自动处理。
+要使用关键帧, 先创建一个带名称的@keyframes规则，以便后续使用 animation-name这个属性来调用指定的@keyframes. 每个@keyframes 规则包含多个关键帧，也就是一段样式块语句，每个关键帧有一个百分比值作为名称，代表在动画进行中，在哪个阶段触发这个帧所包含的样式。
+关键帧的编写顺序没有要求，最后只会根据百分比按由小到大的顺序触发。
+
+具体规则与例子如下：
+```css
+/* 规则 */
+@keyframes animationname {
+  keyframes-selector {
+    css-styles;
+  }
+}
+/* 例子 */
+@keyframes identifier {
+  0% { top: 0; left: 0px}
+  50% { top: 30px; left: 20px; }
+  100% { top: 0; left: 30px;}
+}
+```
+
+### transform
+
+transform就是变形，主要包括旋转rotate、扭曲skew、缩放scale和移动translate以及矩阵变形matrix。
+
+- translate:translate(x,y),translate3d(x,y,z),translateX(x),translateY(y),translateZ(z)。主要是用来平移。
+- scale:scale(x,y),scale3d(x,y,z),scaleX(x),scaleY(y),scaleZ(z).放大缩小
+- rotate:rotate(angle),rotate3d(x,y,z,angle),rotateX(angle),rotateY(angle),rotateZ(angle).旋转
+- skew:skew(x-angle,y-angle),skewX(angle),skewY(angle)
+- transform-origin:以上变化的默认参照点是元素的中心点，不过可以通过transform-origin设置元素的参照点。
+
+
+## 说一下CSS3中新增了哪些属性
+
+这个问题，说几个常见的css3新增属性即可
+
+- 属性选择器
+- border-radius
+- 动画相关：Transition,Transform和Animation
+
+
