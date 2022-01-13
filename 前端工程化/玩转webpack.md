@@ -146,40 +146,45 @@ Bundle就是我们最终输出的一个或多个打包文件。确实，大多�
 #### 生产环境性能优化
 
 ##### 优化打包构建速度
+
+> 首先使用speed-measure-webpack-plugin插件分析打包速度，找出耗时的操作
+
 - oneOf
 在加载loader时候，默认每个文件都会被所有的rules检查，但我们很多文件都只需要一条rules就可以解析完成，这无疑减慢了打包效率，因此可以考虑使用rules的oneOf规则，可以保证文件从oneOf里面的规则从上到下检查，满足一个rule之后就可以不进行下面的loader（需要做好顺序，而且不能同一个文件需要两个loader规则同时处理。
 所以如果有文件都需要不同的rule处理的时候把其中一个loader提取到oneOf外面，就可以了
 比如对于js文件的eslint-loader和babelloader，我们考虑把先执行的eslint-loader放到oneOf的上方就可以了。
 
-- babel(解决js兼容性问题)缓存: 让第二次打包构建速度更快。
-```js
-{
-    test: /\.js$/,
-    exclude: /node_modules/,
-    loader: 'babel-loader',
-    options: {
-    presets: [
-        [
-            '@babel/preset-env',
-            {
-                useBuiltIns: 'usage',
-                corejs: { version: 3 },
-                targets: {
-                chrome: '60',
-                firefox: '50'
+- 缩⼩Loader校验的⽂件范围：test、include、exclude三个配置项来缩⼩loader的处理范围，推荐include
+
+- 使用缓存，可以说以空间换时间，具体方法有：
+    - babel(解决js兼容性问题)缓存: 让第二次打包构建速度更快。
+    ```js
+    {
+        test: /\.js$/,
+        exclude: /node_modules/,
+        loader: 'babel-loader',
+        options: {
+        presets: [
+            [
+                '@babel/preset-env',
+                {
+                    useBuiltIns: 'usage',
+                    corejs: { version: 3 },
+                    targets: {
+                    chrome: '60',
+                    firefox: '50'
+                    }
                 }
-            }
-        ]
-    ],
-    // 开启babel缓存
-    // 第二次构建时，会读取之前的缓存
-    cacheDirectory: true
+            ]
+        ],
+        // 开启babel缓存
+        // 第二次构建时，会读取之前的缓存
+        cacheDirectory: true
+        }
     }
-}
-```
-- 多进程打包:thread-loader、terser-plugin
-thread-loader使用时，需将此 loader 放置在其他 loader (babel-loader) 之前。放置在此 loader 之后的 loader 会在一个独立的 worker 池中运行。
-terser-plugin开启首先需要安装(webpack v5自带，v4需要手动安装)
+    ```
+    - 使用`HardSourceWebpackPlugin`对前一次打包进行缓存
+- 多进程打包:thread-loader、terser-plugin：terser-plugin开启首先需要安装(webpack v5自带，v4需要手动安装)
 - externals 
 react react-dom可以放心的external掉
 - dll 动态链接库
@@ -190,7 +195,9 @@ react react-dom可以放心的external掉
 - 利用缓存(hash-chunkhash-contenthash)
 - tree shaking(webpack自带)
 - code split
-- 懒加载/预加载: 懒加载--import.then();预加载--(webpack)preFetch/preLoad
+- 懒加载/预加载: 
+    - 懒加载--import.then()
+    - 预加载--(webpack)preFetch/preLoad
 - scope hoisting: optimization.concatenateModules = true开启scope hoisting,告知 webpack 去寻找模块图形中的片段，哪些是可以安全地被合并到单一模块中。在生产模式下默认被启用
 
 ### code spliting
