@@ -42,6 +42,14 @@ git pull <远程主机名> <远程分支名>:<本地分支名>// git pull remote
 git pull --rebase remote master:master
 ```
 
+### git push
+
+```
+git push origin master:master
+// 远程分支与本地分支名一致时，可省略冒号
+git push origin master
+```
+
 ### git fetch
 
 与 git pull 的区别是 git fetch 不会自动进行 merge
@@ -69,7 +77,7 @@ git branch -m <old-branch-name> <new-branch-name>
 
 ### git checkout
 
-git checkout 为检出，常用于切换分支
+git checkout 为检出，常用于切换分支，以及撤销工作区的修改
 
 ```
 // 切换分支
@@ -80,4 +88,23 @@ git checkout --track origon/<branch-name>
 git checkout --orphan <branch-name>
 // 将工作区的更改撤销
 git checkout -- <file-name>
+```
+
+### git rebase
+
+![](https://img-blog.csdnimg.cn/12b959efcc454da5a15b9fdec493d61b.png?)
+
+rebase 意为变基，当执行 rabase 操作时，git 会从两个分支的共同祖先开始提取待变基分支（也就是当前分支）上的修改，然后将待变基分支指向基分支的最新节点，然后再将提取到的修改提交应用到基分支的后面，这也就意味着前面从待变基分支上得到的提交记录的 hash 值会改变。
+
+rebase 主要有两种用法
+
+1. 合并分支
+2. 将多次提交记录合并为一次
+
+```
+// 合并分支
+git rebase <branch-name>
+// 合并提交记录，前开后闭，谨慎使用end-hash，因为end-hash之后的提交全部被丢弃了！！
+git rebase -i [start-hash] [end-hash]
+// 如git rebase -i abc123
 ```
