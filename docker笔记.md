@@ -1,5 +1,24 @@
 # docker学习笔记
 
+## 基本概念
+
+1. 镜像。Docker可以把应用程序及其依赖打包到镜像中，镜像是以二进制文件的形式存在，通过镜像文件可以生成Docker容器，类似面向对象中的类和实例的关系，镜像就是容器的模板。
+2. 容器。容器也是一个文件，最终运行的就是一个个的Docker容器（由镜像生成），需要注意，容器运行停止后并不会删除该容器文件，它依然存在于硬盘中。
+
+## 安装
+
+1. 删除旧版本（如果有）`sudo yum remove docker docker-client docker-client-latest docker-common docker-latest docker-latest-logrotate docker-logrotate docker-engine`
+2. 安装依赖包 `sudo yum install -y yum-utils device-mapper-persistent-data lvm2`
+3. 添加 Docker 官方仓库 `sudo yum-config-manager --add-repo https://download.docker.com/linux/centos/docker-ce.repo`
+4. 安装 Docker 引擎 `sudo yum install -y docker-ce`
+5. 启动 Docker 服务并设置开机自启 
+```sh
+sudo systemctl start docker
+sudo systemctl enable docker
+```
+6. 验证 Docker 是否成功安装 `docker --version`
+
+
 ## 镜像和容器的基本操作
 
 ```bash
@@ -18,7 +37,7 @@ $ docker image pull hello-world
 $ docker container run hello-world
 
 # 有些容器不会自动退出，比如下面，-it参数是指shell映射
-$ docker run -it ubuntu bash
+$ docker run -d -it ubuntu bash # -d表示守护进程方式启动
 
 # 必须使用docker container kill 命令手动终止
 $ docker kill [containID]
@@ -34,7 +53,14 @@ $ docker container start [containerID]
 # 查看容器里面 Shell 的标准输出，如果docker run命令运行容器的时候，没有使用-it参数，就要用这个命令查看输出。
 $ docker container logs [containerID]
 # docker container exec命令用于进入一个正在运行的 docker 容器。如果docker run命令运行容器的时候，没有使用-it参数，就要用这个命令进入容器。一旦进入了容器，就可以在容器的 Shell 执行命令了。
-$ docker container exec
+$ docker container exec -it [containerID] /bin/bash
+
+# 查看容器状态
+$ docker ps -a
+
+# 目录挂载
+$ docker run -d -v /host/path:/container/path image_name # 在启动时使用-v 主机目录:容器内目录 进行挂载
+$ docker run -d -v /host/path1:/container/path1 image_name -v /host/path2:/container/path2 # 可以同时挂载多个
 ```
 
 ## 使用Dockerfile文件制作docker镜像

@@ -24,3 +24,7 @@ wget http://123.12.12.12/rest/article/ood/updateStatus
 ```
 
 3. SSH 到另一台服务器：`ssh appadmin/@123.12.12.12`
+
+### 查看本机系统信息
+
+1. 查看/etc/os-release文件中的信息，如`cat /etc/release`或`less /etc/release`等
