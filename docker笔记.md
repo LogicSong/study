@@ -151,3 +151,94 @@ $ docker image push [username]/[repository]:[tag]
 ```
 
 
+## docker compose
+
+### 安装
+
+#### 下载二进制文件
+https://github.com/docker/compose/releases
+
+#### 移动到/usr/local/bin/目录下，并重命名为docker-compose
+
+#### 设置可执行权限
+
+```bash
+chmod +x /usr/local/bin/docker-compose
+```
+
+#### 验证
+```bash
+docker-compose --version
+```
+
+### 应用
+
+#### 配置文件
+以下是一个单机版的kafka的配置文件，其中kafka依赖于zookeeper
+
+`zk-single-kafka-single.yml`
+```yml
+version: '2.1'
+
+services:
+  zoo1:
+    image: zookeeper:3.4.9
+    hostname: zoo1
+    ports:
+      - "2181:2181"
+    environment:
+      ZOO_MY_ID: 1
+      ZOO_PORT: 2181
+      ZOO_SERVERS: server.1=zoo1:2888:3888
+    volumes:
+      - ./zk-single-kafka-single/zoo1/data:/data
+      - ./zk-single-kafka-single/zoo1/datalog:/datalog
+
+  kafka1:
+    image: confluentinc/cp-kafka:5.3.1
+    hostname: kafka1
+    ports:
+      - "9092:9092"
+    environment:
+      KAFKA_ADVERTISED_LISTENERS: LISTENER_DOCKER_INTERNAL://kafka1:19092,LISTENER_DOCKER_EXTERNAL://${DOCKER_HOST_IP:-127.0.0.1}:9092
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: LISTENER_DOCKER_INTERNAL:PLAINTEXT,LISTENER_DOCKER_EXTERNAL:PLAINTEXT
+      KAFKA_INTER_BROKER_LISTENER_NAME: LISTENER_DOCKER_INTERNAL
+      KAFKA_ZOOKEEPER_CONNECT: "zoo1:2181"
+      KAFKA_BROKER_ID: 1
+      KAFKA_LOG4J_LOGGERS: "kafka.controller=INFO,kafka.producer.async.DefaultEventHandler=INFO,state.change.logger=INFO"
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+
+    volumes:
+      - ./zk-single-kafka-single/kafka1/data:/var/lib/kafka/data
+    depends_on:
+      - zoo1
+
+```
+
+#### 运行
+`docker-compose -f zk-single-kafka-single.yml up` //完成环境搭建(会自动下载并运行一个 zookeeper 和 kafka )
+
+#### 停止
+`docker-compose -f zk-single-kafka-single.yml down`
+
+
+
+## docker镜像无法拉取
+
+配置mirrors
+
+在/etc/docker目录下的daemon.json文件新增以下内容(没有该文件则新建)
+
+```json
+{
+    "registry-mirrors": [
+        "https://do.nark.eu.org",
+        "https://dc.j8.work",
+        "https://docker.m.daocloud.io",
+        "https://dockerproxy.com",
+        "https://docker.mirrors.ustc.edu.cn",
+        "https://docker.nju.edu.cn",
+        "https://6k0ibwjk.mirror.aliyuncs.com"
+    ]
+}
+```
